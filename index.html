@@ -10,16 +10,12 @@
 <body>
 <header class="nav">
   <a class="brand" href="#home">Fiscal<span>Frontier</span></a>
-  <nav><a href="#about">About</a><a href="#research">Research</a><a href="#markets">Markets</a><a href="#insights">Insights</a><a href="https://substack.com/@fiscalfrontier" target="_blank" rel="noopener">Substack</a><a href="#contact">Contact</a></nav>
+  <nav><a href="#about">About</a><a href="#research">Research</a><a href="#insights">Insights</a><a href="https://substack.com/@fiscalfrontier" target="_blank" rel="noopener">Substack</a><a href="#contact">Contact</a></nav>
   <div class="nav-right">
     <a class="email-link" href="mailto:siddheshchaudhari309@gmail.com">siddheshchaudhari309@gmail.com</a>
     <a class="profile-mini" href="#about"><img src="images/profile.png" alt="Siddhesh"></a>
   </div>
 </header>
-
-<div class="market-ticker" role="region" aria-label="Live market ticker">
-  <div class="market-ticker-track" id="market-ticker-track">Loading market data…</div>
-</div>
 
 <main>
 <section id="home" class="hero">
@@ -38,12 +34,6 @@
     </div>
     <div class="founder-photo"><img src="images/profile.png" alt="Siddhesh — Founder of Fiscal Frontier"><div class="photo-label">SIDDHESH<br><span>FOUNDER • FISCAL FRONTIER</span></div></div>
   </div>
-</section>
-
-<section id="markets" class="section markets-section">
-  <div class="section-top"><div><p class="eyebrow">LIVE MARKETS</p><h2>Global Markets.</h2></div><p class="muted">Major indices across India, the US, Europe and Asia-Pacific.</p></div>
-  <div id="global-markets-body" class="mkt-body">Loading market data…</div>
-  <p class="mkt-disclaimer">Market data may be real-time or delayed depending on the exchange and data provider. Information is provided for informational and research purposes only and should not be considered investment advice.</p>
 </section>
 
 <section class="ticker"><span>VALUATION</span><span>PORTFOLIO MANAGEMENT</span><span>MARKET RESEARCH</span><span>FINANCIAL MODELLING</span><span>INVESTING</span></section>
@@ -98,13 +88,6 @@
 
 <footer><div class="brand">Fiscal<span>Frontier</span></div><p>© 2026 Fiscal Frontier. For educational purposes only. Not investment advice.</p><div><a href="https://substack.com/@fiscalfrontier" target="_blank" rel="noopener">Substack</a> · <a href="#home">Back to top ↑</a></div></footer>
 
-<div id="market-detail-modal" class="mkt-modal" aria-hidden="true">
-  <div class="mkt-modal-panel">
-    <button id="market-detail-close" class="mkt-modal-close" aria-label="Close">&times;</button>
-    <div id="market-detail-body"></div>
-  </div>
-</div>
-
 <script>
 function subscribe(e){
   e.preventDefault();
@@ -114,6 +97,5 @@ function subscribe(e){
   window.location.href='mailto:siddheshchaudhari309@gmail.com?subject='+subject+'&body='+body;
 }
 </script>
-<script src="assets/markets.js"></script>
 </body>
 </html>
