@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiscal Frontier | Admin Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #101311; --muted: #68706b; --paper: #f5f4ef; --white: #fffefa; --line: #d9dbd3; --accent: #b7d7a8; }
+  body { background: var(--paper); color: var(--ink); font-family: "DM Sans", sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+  .admin-box { background: var(--white); padding: 50px 40px; border: 1px solid var(--line); width: 100%; max-width: 450px; box-shadow: 12px 14px 0 var(--accent); }
+  .brand { font-size: 24px; font-weight: 700; margin-bottom: 30px; text-align: center; }
+  .brand span { font-family: "Playfair Display", serif; font-style: italic; font-weight: 500; }
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: var(--muted); margin-bottom: 20px; display: block; text-align: center; }
+  input, textarea { width: 100%; padding: 14px; margin-bottom: 20px; border: 1px solid var(--line); font-family: inherit; font-size: 14px; box-sizing: border-box; background: transparent; }
+  input:focus, textarea:focus { outline: none; border-color: var(--ink); }
+  button { background: var(--ink); color: var(--white); border: none; padding: 15px; width: 100%; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
+  button:hover { opacity: 0.8; }
+  .dashboard { display: none; }
+</style>
+</head>
+<body>
+
+  <!-- Login View -->
+  <div class="admin-box" id="login-view">
+    <div class="brand">Fiscal<span>Frontier</span></div>
+    <span class="eyebrow">AUTHOR SECURE LOGIN</span>
+    <form id="login-form">
+      <input type="email" placeholder="Email address" required>
+      <input type="password" placeholder="Password" required>
+      <button type="submit">Access Dashboard</button>
+    </form>
+  </div>
+
+  <!-- Upload Dashboard View -->
+  <div class="admin-box dashboard" id="dashboard-view">
+    <div class="brand">Fiscal<span>Frontier</span></div>
+    <span class="eyebrow">PUBLISH RESEARCH</span>
+    <form id="upload-form">
+      <input type="text" placeholder="Research Title (e.g. Value vs Momentum)" required>
+      <textarea placeholder="Brief insight or methodology summary..." rows="3" required></textarea>
+      <input type="url" placeholder="Paste direct link to PDF (Google Drive, Substack, GitHub)" required>
+      <button type="submit">Publish to Live Site</button>
+    </form>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCdL7KhCVyOlfjDLxkjVmdu5ih6SMa4K1Q",
+    authDomain: "fiscal-frontier-admin.firebaseapp.com",
+    projectId: "fiscal-frontier-admin",
+    storageBucket: "fiscal-frontier-admin.firebasestorage.app",
+    messagingSenderId: "1046968752987",
+    appId: "1:1046968752987:web:c399cd3482f6d75c5a587e",
+    measurementId: "G-LFQD7JHTPE"
+  };
+  
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Handle Login
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = e.target.elements[0].value;
+    const password = e.target.elements[1].value;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      document.getElementById('login-view').style.display = 'none';
+      document.getElementById('dashboard-view').style.display = 'block';
+    } catch (error) {
+      alert("Login failed: " + error.message);
+    }
+  });
+
+  // Handle Firestore Data Submission
+  document.getElementById('upload-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = e.target.elements[0].value;
+    const summary = e.target.elements[1].value;
+    const pdfUrl = e.target.elements[2].value;
+
+    try {
+      await addDoc(collection(db, "research_posts"), {
+        title, summary, pdfUrl, createdAt: new Date()
+      });
+      
+      alert("Research published successfully!");
+      e.target.reset();
+    } catch (error) {
+      alert("Upload failed: " + error.message);
+    }
+  });
+</script>
+</body>
+</html>
