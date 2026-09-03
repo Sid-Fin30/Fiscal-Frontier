@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Fiscal Frontier | Admin Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
 <style>
@@ -17,6 +17,9 @@
   button { background: var(--ink); color: var(--white); border: none; padding: 15px; width: 100%; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
   button:hover { opacity: 0.8; }
   .dashboard { display: none; }
+  .small { font-size: 13px; color: var(--muted); margin-bottom: 12px; text-align: center; }
+  .row { display:flex; gap: 10px; align-items: center; margin-bottom: 12px;}
+  .btn-compact { padding: 10px; width: auto; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -26,73 +29,163 @@
     <div class="brand">Fiscal<span>Frontier</span></div>
     <span class="eyebrow">AUTHOR SECURE LOGIN</span>
     <form id="login-form">
-      <input type="email" placeholder="Email address" required>
-      <input type="password" placeholder="Password" required>
+      <input type="email" placeholder="Email address" required />
+      <input type="password" placeholder="Password" required />
       <button type="submit">Access Dashboard</button>
     </form>
+    <div class="small">If you see "unauthorized-domain" in console, add <code>Sid-Fin30.github.io</code> to Firebase authorized domains.</div>
   </div>
 
   <!-- Upload Dashboard View -->
   <div class="admin-box dashboard" id="dashboard-view">
     <div class="brand">Fiscal<span>Frontier</span></div>
     <span class="eyebrow">PUBLISH RESEARCH</span>
+
+    <div class="row" style="justify-content: space-between;">
+      <div style="font-size:14px;">
+        Signed in as <strong id="user-email" style="display:inline-block; margin-left:6px;"></strong>
+      </div>
+      <div>
+        <button id="signout-btn" class="btn-compact" style="background:#e0e0e0;color:var(--ink);">Sign out</button>
+      </div>
+    </div>
+
     <form id="upload-form">
-      <input type="text" placeholder="Research Title (e.g. Value vs Momentum)" required>
+      <input type="text" placeholder="Research Title (e.g. Value vs Momentum)" required />
       <textarea placeholder="Brief insight or methodology summary..." rows="3" required></textarea>
-      <input type="url" placeholder="Paste direct link to PDF (Google Drive, Substack, GitHub)" required>
+      <input type="url" placeholder="Paste direct link to PDF (Google Drive, Substack, GitHub)" required />
       <button type="submit">Publish to Live Site</button>
     </form>
+    <div class="small">Use a direct link to the PDF (for Google Drive use a direct download link).</div>
   </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
+  // --- UPDATE: confirm these values match your Firebase project settings ---
   const firebaseConfig = {
     apiKey: "AIzaSyCdL7KhCVyOlfjDLxkjVmdu5ih6SMa4K1Q",
     authDomain: "fiscal-frontier-admin.firebaseapp.com",
     projectId: "fiscal-frontier-admin",
-    storageBucket: "fiscal-frontier-admin.firebasestorage.app",
+    storageBucket: "fiscal-frontier-admin.appspot.com", // suggested typical format; confirm in Console
     messagingSenderId: "1046968752987",
     appId: "1:1046968752987:web:c399cd3482f6d75c5a587e",
     measurementId: "G-LFQD7JHTPE"
   };
-  
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // Handle Login
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = e.target.elements[0].value;
-    const password = e.target.elements[1].value;
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      document.getElementById('login-view').style.display = 'none';
-      document.getElementById('dashboard-view').style.display = 'block';
-    } catch (error) {
-      alert("Login failed: " + error.message);
+  // Helper UI functions
+  const showDashboard = (user) => {
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('dashboard-view').style.display = 'block';
+    document.getElementById('user-email').textContent = user?.email || '';
+  };
+  const showLogin = () => {
+    document.getElementById('login-view').style.display = 'block';
+    document.getElementById('dashboard-view').style.display = 'none';
+    document.getElementById('user-email').textContent = '';
+  };
+
+  // Show/hide based on auth state (important so existing sessions work)
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("Auth state: signed in", user);
+      showDashboard(user);
+    } else {
+      console.log("Auth state: signed out");
+      showLogin();
     }
   });
 
-  // Handle Firestore Data Submission
+  // Detailed login handler with good debug logging
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = e.target.elements[0].value?.trim() || "";
+    const password = e.target.elements[1].value || "";
+
+    if (!email || !password) {
+      console.warn("Empty email or password attempt", { email, passwordProvided: !!password });
+      return alert("Please enter email and password.");
+    }
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      console.log("Signed in user:", cred.user);
+      // onAuthStateChanged will show the dashboard
+    } catch (error) {
+      // Debug logs for diagnosis — copy these when asking for help
+      console.error("Firebase signIn error object:", error);
+      console.error("error.code:", error?.code);
+      console.error("error.message:", error?.message);
+      if (error?.customData) console.error("error.customData:", error.customData);
+      if (error?.serverResponse) {
+        try {
+          console.error("serverResponse (parsed):", JSON.parse(error.serverResponse));
+        } catch (e) {
+          console.error("serverResponse (raw):", error.serverResponse);
+        }
+      }
+
+      // Friendly messages for common error codes
+      const code = error?.code || "";
+      let friendly = "Login failed: " + (error?.message || code);
+      if (code === "auth/invalid-email") friendly = "Invalid email address.";
+      else if (code === "auth/user-not-found") friendly = "No user found for that email. Create the user in Firebase Console or sign up first.";
+      else if (code === "auth/wrong-password") friendly = "Incorrect password.";
+      else if (code === "auth/operation-not-allowed") friendly = "Email/password sign-in is disabled in Firebase Console.";
+      else if (code === "auth/unauthorized-domain") friendly = "This domain isn't authorized in Firebase Console (Authorized domains). Add Sid-Fin30.github.io.";
+      else if (code === "auth/invalid-credential") friendly = "Invalid credential. For email/password double-check you're using the correct project and account.";
+
+      alert(friendly);
+    }
+  });
+
+  // Upload handler uses serverTimestamp for createdAt
   document.getElementById('upload-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const title = e.target.elements[0].value;
-    const summary = e.target.elements[1].value;
-    const pdfUrl = e.target.elements[2].value;
+    const title = e.target.elements[0].value?.trim();
+    const summary = e.target.elements[1].value?.trim();
+    const pdfUrl = e.target.elements[2].value?.trim();
+
+    if (!title || !summary || !pdfUrl) {
+      return alert("Please fill all fields.");
+    }
+
+    // Basic validation for URL (ensures user pasted something URL-like)
+    try {
+      new URL(pdfUrl);
+    } catch (_) {
+      return alert("Please enter a valid URL for the PDF.");
+    }
 
     try {
       await addDoc(collection(db, "research_posts"), {
-        title, summary, pdfUrl, createdAt: new Date()
+        title,
+        summary,
+        pdfUrl,
+        createdAt: serverTimestamp()
       });
-      
       alert("Research published successfully!");
       e.target.reset();
     } catch (error) {
-      alert("Upload failed: " + error.message);
+      console.error("Upload failed:", error);
+      alert("Upload failed: " + (error?.message || error));
+    }
+  });
+
+  // Sign out
+  document.getElementById('signout-btn').addEventListener('click', async () => {
+    try {
+      await signOut(auth);
+      showLogin();
+    } catch (error) {
+      console.error("Sign out error:", error);
+      alert("Sign out failed: " + (error?.message || error));
     }
   });
 </script>
